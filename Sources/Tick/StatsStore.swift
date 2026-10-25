@@ -39,9 +39,12 @@ final class StatsStore {
             .appendingPathComponent("Tick", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         url = dir.appendingPathComponent("stats.json")
-        if let url, let data = try? Data(contentsOf: url),
-           let saved = try? JSONDecoder().decode([String: DayStat].self, from: data) {
-            days = saved
+        if let url, let data = try? Data(contentsOf: url) {
+            if let saved = try? JSONDecoder().decode([String: DayStat].self, from: data) {
+                days = saved
+            } else {
+                setAsideUnreadable(url)
+            }
         }
     }
 
@@ -84,9 +87,9 @@ final class StatsStore {
         return totals.map { ($0.key, $0.value) }.sorted { $0.seconds > $1.seconds }
     }
 
-    func recordFocus(seconds: Int, countsAsPomodoro: Bool, label: String) {
+    func recordFocus(seconds: Int, countsAsPomodoro: Bool, label: String, on date: Date = Date()) {
         let label = label.trimmingCharacters(in: .whitespacesAndNewlines)
-        update { stat in
+        update(on: date) { stat in
             stat.focusSeconds += seconds
             if countsAsPomodoro { stat.pomodoros += 1 }
             if !label.isEmpty { stat.labels[label, default: 0] += seconds }
@@ -94,7 +97,7 @@ final class StatsStore {
     }
 
     func recordBreak(seconds: Int) {
-        update { $0.breakSeconds += seconds }
+        update(on: Date()) { $0.breakSeconds += seconds }
     }
 
     /// Used only by the snapshot renderer to show realistic charts.
@@ -111,8 +114,8 @@ final class StatsStore {
         }
     }
 
-    private func update(_ change: (inout DayStat) -> Void) {
-        let key = Self.keyFormatter.string(from: Date())
+    private func update(on date: Date, _ change: (inout DayStat) -> Void) {
+        let key = Self.keyFormatter.string(from: date)
         var stat = days[key] ?? DayStat()
         change(&stat)
         days[key] = stat

@@ -2,16 +2,24 @@ import Foundation
 
 /// Turns Do Not Disturb on and off during focus sessions.
 /// macOS has no public API for Focus, so this runs two user-made Shortcuts that each contain a "Set Focus" action.
+/// Runs happen one at a time, in order, so a quick start-then-pause can't finish "On" after "Off".
 final class FocusModeController {
     static let onShortcut = "Tick Focus On"
     static let offShortcut = "Tick Focus Off"
 
     private var active = false
+    private let queue = DispatchQueue(label: "TickFocus.focusMode")
 
     func set(active newValue: Bool) {
         guard newValue != active else { return }
         active = newValue
-        run(newValue ? Self.onShortcut : Self.offShortcut)
+        let name = newValue ? Self.onShortcut : Self.offShortcut
+        queue.async { Self.runAndWait(name) }
+    }
+
+    /// Blocks until every queued on/off has finished. Used when the app quits.
+    func waitUntilApplied() {
+        queue.sync {}
     }
 
     /// Whether both shortcuts exist in the Shortcuts app.
@@ -31,12 +39,13 @@ final class FocusModeController {
         }.value
     }
 
-    private func run(_ name: String) {
+    private static func runAndWait(_ name: String) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
         process.arguments = ["run", name]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
-        try? process.run()
+        guard (try? process.run()) != nil else { return }
+        process.waitUntilExit()
     }
 }

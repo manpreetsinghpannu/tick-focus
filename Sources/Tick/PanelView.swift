@@ -83,7 +83,7 @@ struct TimerTab: View {
 
             TabTitle(text: engine.phase.title, color: accent)
             if engine.mode == .pomodoro {
-                Text("Round \(engine.round) of \(settings.rounds)")
+                Text("Round \(engine.displayRound) of \(settings.rounds)")
                     .font(.system(size: 11))
                     .foregroundStyle(p.muted)
             }
@@ -140,6 +140,12 @@ struct TimerTab: View {
                 .help("Skip")
             }
 
+            if let note = engine.autoPauseNote {
+                Label(note, systemImage: "moon.zzz")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(p.muted)
+            }
+
             if engine.mode == .custom {
                 CustomMinutesRow()
                     .padding(.top, 6)
@@ -192,6 +198,14 @@ private struct WorkingOnPicker: View {
                      : "\(formatMinutes(today.worked)) of \(formatMinutes(today.target)) today")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(today.status == .done ? p.done : p.muted)
+            }
+        }
+        .background {
+            // Clicking anywhere else closes the list.
+            if open {
+                Color.black.opacity(0.001)
+                    .frame(width: 2000, height: 2000)
+                    .onTapGesture { open = false }
             }
         }
         .overlay(alignment: .top) {

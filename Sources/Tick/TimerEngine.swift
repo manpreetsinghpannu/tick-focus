@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Observation
 
 enum TimerMode: String, CaseIterable {
@@ -34,12 +34,23 @@ final class TimerEngine {
     private(set) var total: Int
     private(set) var remaining: Int
     private(set) var isRunning = false
+    /// Why the timer stopped itself (Mac slept, screen locked), shown until you start again.
+    private(set) var autoPauseNote: String?
+
     /// The task this focus time counts toward. Finished focus sessions add their minutes to it.
-    var workingOn: UUID?
+    /// Remembered across restarts.
+    var workingOn: UUID? {
+        didSet { UserDefaults.standard.set(workingOn?.uuidString, forKey: "workingOn") }
+    }
 
     @ObservationIgnored private let focusMode = FocusModeController()
     @ObservationIgnored private var timer: DispatchSourceTimer?
+    /// When the running session ends. Remaining time is read from the clock, so a late timer never drifts.
+    @ObservationIgnored private var endDate: Date?
+    /// Keeps macOS App Nap from delaying ticks while the panel is closed. Still allows the Mac to sleep.
+    @ObservationIgnored private var activity: NSObjectProtocol?
     @ObservationIgnored private var tickIndex = 0
+    @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
 
     init(settings: AppSettings, stats: StatsStore, sound: SoundPlayer, tasks: TaskStore) {
         self.settings = settings
@@ -49,6 +60,12 @@ final class TimerEngine {
         let focus = settings.focusMinutes * 60
         total = focus
         remaining = focus
+        workingOn = UserDefaults.standard.string(forKey: "workingOn").flatMap(UUID.init(uuidString:))
+        watchForAbsence()
+    }
+
+    deinit {
+        for (center, token) in observers { center.removeObserver(token) }
     }
 
     /// The selected task's title, or "" if none is selected (or it was deleted or completed).
@@ -61,10 +78,12 @@ final class TimerEngine {
     var isFresh: Bool { remaining == total }
     var minutesText: String { String(format: "%02d", remaining / 60) }
     var secondsText: String { String(format: "%02d", remaining % 60) }
+    /// Never shows "Round 5 of 4" if the setting was lowered mid-cycle.
+    var displayRound: Int { min(round, settings.rounds) }
 
     var nextPhase: Phase {
         switch phase {
-        case .focus: round % settings.rounds == 0 ? .longBreak : .shortBreak
+        case .focus: round >= settings.rounds ? .longBreak : .shortBreak
         case .shortBreak, .longBreak: .focus
         case .custom: .custom
         }
@@ -88,8 +107,12 @@ final class TimerEngine {
         if remaining == 0 { remaining = total }
         // The chime marks the start of a fresh focus session, not a resume.
         if isFresh && !phase.isBreak && settings.startChime { sound.playChime() }
+        autoPauseNote = nil
         isRunning = true
         tickIndex = 0
+        endDate = Date().addingTimeInterval(TimeInterval(remaining))
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiatedAllowingIdleSystemSleep, reason: "Focus timer running")
         let t = DispatchSource.makeTimerSource(queue: .main)
         t.schedule(deadline: .now() + 1, repeating: 1, leeway: .milliseconds(5))
         t.setEventHandler { [weak self] in self?.secondElapsed() }
@@ -99,15 +122,27 @@ final class TimerEngine {
     }
 
     func pause() {
+        if isRunning, let endDate {
+            remaining = max(0, Int(endDate.timeIntervalSinceNow.rounded()))
+        }
         isRunning = false
+        endDate = nil
         timer?.cancel()
         timer = nil
+        if let activity { ProcessInfo.processInfo.endActivity(activity) }
+        activity = nil
         syncFocusMode()
     }
 
     /// Do Not Disturb is on only while a focus (not break) session is actually running.
     func syncFocusMode() {
         focusMode.set(active: settings.focusModeSync && isRunning && !phase.isBreak)
+    }
+
+    /// Called when the app quits: stop, and make sure Do Not Disturb is turned back off first.
+    func shutdown() {
+        pause()
+        focusMode.waitUntilApplied()
     }
 
     func reset() {
@@ -131,6 +166,7 @@ final class TimerEngine {
 
     /// Picks up edited durations, but never disturbs a session that's running or partly done.
     func settingsChanged() {
+        round = min(round, settings.rounds)
         if !isRunning && isFresh { load() }
     }
 
@@ -141,10 +177,31 @@ final class TimerEngine {
         remaining = total
     }
 
+    /// Time only counts while someone can be at the Mac: sleeping, a dark screen, a locked
+    /// screen or switching users all pause the session. You resume it yourself.
+    private func watchForAbsence() {
+        let workspace = NSWorkspace.shared.notificationCenter
+        let reasons: [(NotificationCenter, Notification.Name, String)] = [
+            (workspace, NSWorkspace.willSleepNotification, "Paused while your Mac slept."),
+            (workspace, NSWorkspace.screensDidSleepNotification, "Paused when the screen turned off."),
+            (workspace, NSWorkspace.sessionDidResignActiveNotification, "Paused when you switched users."),
+            (DistributedNotificationCenter.default(), Notification.Name("com.apple.screenIsLocked"),
+             "Paused when the screen locked."),
+        ]
+        for (center, name, note) in reasons {
+            let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                guard let self, self.isRunning else { return }
+                self.pause()
+                self.autoPauseNote = note
+            }
+            observers.append((center, token))
+        }
+    }
+
     private func secondElapsed() {
-        remaining -= 1
-        if remaining <= 0 {
-            remaining = 0
+        guard let endDate else { return }
+        remaining = max(0, Int(endDate.timeIntervalSinceNow.rounded()))
+        if remaining == 0 {
             finish()
             return
         }
@@ -180,13 +237,30 @@ final class TimerEngine {
     private func finish() {
         pause()
         sound.playBell()
+        let end = Date()
         switch phase {
         case .focus, .custom:
-            stats.recordFocus(seconds: total, countsAsPomodoro: phase == .focus, label: workingOnTitle)
-            if let id = workingOn, !workingOnTitle.isEmpty { tasks.log(minutes: total / 60, to: id) }
-        case .shortBreak, .longBreak: stats.recordBreak(seconds: total)
+            // Counts even if the task was checked off mid-session.
+            let task = tasks.task(workingOn)
+            for (day, seconds) in Self.splitByDay(seconds: total, endingAt: end) {
+                stats.recordFocus(seconds: seconds, countsAsPomodoro: phase == .focus && day == end,
+                                  label: task?.title ?? "", on: day)
+                if let task { tasks.log(minutes: seconds / 60, to: task.id, on: day) }
+            }
+        case .shortBreak, .longBreak:
+            stats.recordBreak(seconds: total)
         }
         advance()
+    }
+
+    /// Splits a session ending at `end` across midnight, so 11:50 PM–12:15 AM credits each day its share.
+    /// The day that holds the end is returned as `end` itself.
+    static func splitByDay(seconds: Int, endingAt end: Date) -> [(Date, Int)] {
+        let midnight = Calendar.current.startOfDay(for: end)
+        let today = min(seconds, Int(end.timeIntervalSince(midnight)))
+        let yesterday = seconds - today
+        guard yesterday > 0 else { return [(end, seconds)] }
+        return [(midnight.addingTimeInterval(-1), yesterday), (end, today)]
     }
 
     private func advance() {
@@ -195,7 +269,7 @@ final class TimerEngine {
             return
         }
         let next = nextPhase
-        if phase.isBreak { round = round % settings.rounds + 1 }
+        if phase.isBreak { round = round >= settings.rounds ? 1 : round + 1 }
         phase = next
         load()
     }

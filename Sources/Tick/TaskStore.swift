@@ -12,6 +12,14 @@ enum DayKey {
     static func of(_ date: Date) -> String { formatter.string(from: date) }
 }
 
+/// Moves a data file that couldn't be read out of the way (e.g. stats.unreadable-1761400000.json),
+/// so the next save starts a fresh file instead of overwriting the old data.
+func setAsideUnreadable(_ url: URL) {
+    let stamp = Int(Date().timeIntervalSince1970)
+    let name = url.deletingPathExtension().lastPathComponent + ".unreadable-\(stamp).json"
+    try? FileManager.default.moveItem(at: url, to: url.deletingLastPathComponent().appendingPathComponent(name))
+}
+
 struct TaskList: Codable, Identifiable, Hashable {
     var id = UUID()
     var name: String
@@ -137,12 +145,16 @@ final class TaskStore {
             url = dir.appendingPathComponent("tasks.json")
         }
         loading = true
-        if let url, let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode(Saved.self, from: data) {
-            lists = saved.lists
-            tasks = saved.tasks
-            selectedListID = saved.selectedListID
-            sort = saved.sort
-            grouping = saved.grouping
+        if let url, let data = try? Data(contentsOf: url) {
+            if let saved = try? JSONDecoder().decode(Saved.self, from: data) {
+                lists = saved.lists
+                tasks = saved.tasks
+                selectedListID = saved.selectedListID
+                sort = saved.sort
+                grouping = saved.grouping
+            } else {
+                setAsideUnreadable(url)
+            }
         }
         if lists.isEmpty { lists = [TaskList(name: "Study")] }
         if selectedListID == nil || !lists.contains(where: { $0.id == selectedListID }) { selectedListID = lists[0].id }

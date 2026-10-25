@@ -71,7 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        engine.pause() // also turns Do Not Disturb back off
+        engine.shutdown() // also turns Do Not Disturb back off before quitting
     }
 
     /// A popover attached to the menu bar inherits the menu bar's look (often dark, depending on

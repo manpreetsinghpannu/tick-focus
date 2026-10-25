@@ -140,7 +140,7 @@ private struct TaskRow: View {
             } label: {
                 Image(systemName: task.isDone ? "checkmark.square.fill" : "square")
                     .font(.system(size: 15))
-                    .foregroundStyle(task.isDone ? p.muted : p.muted)
+                    .foregroundStyle(task.isDone ? p.done : p.muted)
             }
             .buttonStyle(.plain)
 
@@ -161,9 +161,12 @@ private struct TaskRow: View {
         .contextMenu {
             Button("Work on this") { engine.workingOn = task.id; workOn() }
             Button("Open") { open() }
-            Divider()
-            Button("Move up") { store.move(task.id, up: true) }
-            Button("Move down") { store.move(task.id, up: false) }
+            // Moving only makes sense in the custom order; other sorts would hide the change.
+            if store.sort == .custom {
+                Divider()
+                Button("Move up") { store.move(task.id, up: true) }
+                Button("Move down") { store.move(task.id, up: false) }
+            }
             Divider()
             Button("Delete", role: .destructive) { store.delete(task.id) }
         }

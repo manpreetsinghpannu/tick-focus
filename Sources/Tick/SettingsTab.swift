@@ -190,6 +190,7 @@ struct SettingsTab: View {
         .onChange(of: settings.shortBreakMinutes) { engine.settingsChanged() }
         .onChange(of: settings.longBreakMinutes) { engine.settingsChanged() }
         .onChange(of: settings.focusModeSync) { engine.syncFocusMode() }
+        .onChange(of: settings.rounds) { engine.settingsChanged() }
     }
 
     private var tickPatternHint: String {
