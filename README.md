@@ -82,8 +82,8 @@
 On Track is built from source. You need **macOS 14 or later** and the **Swift command-line tools** (the full Xcode app is not required).
 
 ```bash
-git clone https://github.com/manpreetsinghpannu/tick-focus.git
-cd tick-focus
+git clone https://github.com/manpreetsinghpannu/on-track.git
+cd on-track
 ./build.sh --install
 open "/Applications/On Track.app"
 ```
