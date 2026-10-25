@@ -1,34 +1,23 @@
 import SwiftUI
 
-/// Countdown digits with a thin background-colored line cut through their middle.
-/// Shrinks to fit `maxWidth` and centers on the digits themselves, so any ClockFont sits right in the ring.
-struct SplitDigits: View {
+/// The countdown as "23:42". Shrinks to fit `maxWidth` and centers on the digits themselves,
+/// so any ClockFont sits right in the middle of the ring.
+struct ClockDigits: View {
     let minutes: String
     let seconds: String
     let size: CGFloat
     let color: Color
-    let gapColor: Color
     var maxWidth: CGFloat = .infinity
     var face: ClockFont = DigitFont.face
 
     var body: some View {
         let size = DigitFont.fitting(self.size, width: maxWidth, face: face)
-        let center = DigitFont.centerOffset(size, face: face)
-        HStack(spacing: size * 0.14) {
-            Text(minutes)
-            Text(seconds)
-        }
-        .font(DigitFont.font(size, face: face))
-        .monospacedDigit()
-        .foregroundStyle(color)
-        .fixedSize()
-        .overlay {
-            Rectangle()
-                .fill(gapColor)
-                .frame(height: max(2, size * 0.045))
-                .offset(y: center)
-        }
-        .offset(y: -center)
+        Text("\(minutes):\(seconds)")
+            .font(DigitFont.font(size, face: face))
+            .monospacedDigit()
+            .foregroundStyle(color)
+            .fixedSize()
+            .offset(y: -DigitFont.centerOffset(size, face: face))
     }
 }
 

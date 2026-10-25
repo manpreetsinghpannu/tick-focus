@@ -42,7 +42,7 @@ struct Palette {
 /// Typefaces for the countdown digits. All ship with macOS, so nothing is bundled.
 enum ClockFont: String, CaseIterable {
     case compressed, compressedLight, condensed, rounded, mono, newYork
-    case dinCondensed, dinAlternate, futura, helveticaCondensed, avenirCondensed, impact
+    case dinCondensed, dinAlternate, futura, helveticaCondensed, avenirCondensed, impact, arialRounded
 
     var title: String {
         switch self {
@@ -58,6 +58,7 @@ enum ClockFont: String, CaseIterable {
         case .helveticaCondensed: "Helvetica Condensed"
         case .avenirCondensed: "Avenir Condensed"
         case .impact: "Impact"
+        case .arialRounded: "Arial Rounded"
         }
     }
 
@@ -80,22 +81,22 @@ enum ClockFont: String, CaseIterable {
         case .helveticaCondensed: NSFont(name: "HelveticaNeue-CondensedBlack", size: size) ?? fallback
         case .avenirCondensed: NSFont(name: "AvenirNextCondensed-Bold", size: size) ?? fallback
         case .impact: NSFont(name: "Impact", size: size) ?? fallback
+        case .arialRounded: NSFont(name: "ArialRoundedMTBold", size: size) ?? design(.rounded, .bold)
         }
     }
 }
 
 /// The digit face used for every countdown.
 enum DigitFont {
-    static var face: ClockFont = .compressed
+    static var face: ClockFont = .arialRounded
 
     static func font(_ size: CGFloat, face: ClockFont = DigitFont.face) -> Font {
         Font(face.nsFont(size) as CTFont)
     }
 
-    /// Largest size up to `size` at which "88 88" fits in `width`, since some faces run much wider than others.
+    /// Largest size up to `size` at which "88:88" fits in `width`, since some faces run much wider than others.
     static func fitting(_ size: CGFloat, width: CGFloat, face: ClockFont = DigitFont.face) -> CGFloat {
-        let digits = ("88" as NSString).size(withAttributes: [.font: face.nsFont(size)]).width
-        let total = digits * 2 + size * 0.14
+        let total = ("88:88" as NSString).size(withAttributes: [.font: face.nsFont(size)]).width
         return total > width ? size * width / total : size
     }
 

@@ -9,8 +9,8 @@ enum MenuBarPill {
         let icon = !running && !fresh ? "pause.fill" : (phase.isBreak ? "cup.and.saucer.fill" : "target")
         let pill = HStack(spacing: 4) {
             Image(systemName: icon).font(.system(size: 9, weight: .bold))
-            Text("\(minutes) \(seconds)")
-                .font(DigitFont.font(15))
+            Text("\(minutes):\(seconds)")
+                .font(DigitFont.font(12))
                 .monospacedDigit()
         }
         .foregroundStyle(p.onAccent)

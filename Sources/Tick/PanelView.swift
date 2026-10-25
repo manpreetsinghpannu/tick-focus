@@ -98,8 +98,8 @@ struct TimerTab: View {
                         .rotationEffect(.degrees(-90))
                         .animation(.linear(duration: 0.3), value: engine.progress)
                 }
-                SplitDigits(minutes: engine.minutesText, seconds: engine.secondsText,
-                            size: 68, color: accent, gapColor: p.bg, maxWidth: 150)
+                ClockDigits(minutes: engine.minutesText, seconds: engine.secondsText,
+                            size: 50, color: accent, maxWidth: 140)
             }
             .frame(width: 184, height: 184)
             .padding(.vertical, 4)
@@ -147,8 +147,8 @@ struct TimerTab: View {
                 VStack(spacing: 0) {
                     Text("Up next").font(.system(size: 11)).foregroundStyle(p.muted)
                     let next = engine.duration(of: engine.nextPhase)
-                    Text(String(format: "%02d %02d", next / 60, next % 60))
-                        .font(DigitFont.font(22))
+                    Text(String(format: "%02d:%02d", next / 60, next % 60))
+                        .font(DigitFont.font(18))
                         .foregroundStyle(p.accent)
                     Text(engine.nextPhase.title).font(.system(size: 11)).foregroundStyle(p.muted)
                 }

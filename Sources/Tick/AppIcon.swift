@@ -272,12 +272,12 @@ private struct CutDigits: View {
 
     var body: some View {
         Text(text)
-            .font(DigitFont.font(size))
+            .font(DigitFont.font(size, face: .compressed))
             .foregroundStyle(style)
             .overlay {
                 Rectangle()
                     .frame(height: size * 0.03)
-                    .offset(y: DigitFont.centerOffset(size))
+                    .offset(y: DigitFont.centerOffset(size, face: .compressed))
                     .blendMode(.destinationOut)
             }
             .compositingGroup()

@@ -50,7 +50,7 @@ enum Snapshot {
                 Circle().trim(from: 0, to: 0.3)
                     .stroke(p.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                SplitDigits(minutes: "21", seconds: "14", size: size, color: p.accent, gapColor: p.bg,
+                ClockDigits(minutes: "21", seconds: "14", size: size, color: p.accent,
                             maxWidth: 124, face: face)
             }
             .frame(width: 170, height: 170)
@@ -66,7 +66,7 @@ enum Snapshot {
                         VStack(spacing: 8) {
                             HStack(spacing: 0) { sample(face, .dark); sample(face, .light) }
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
-                            Text("\((ClockFont.allCases.firstIndex(of: face) ?? 0) + 1). \(face.title)\(face == .compressed ? " (current)" : "")")
+                            Text("\((ClockFont.allCases.firstIndex(of: face) ?? 0) + 1). \(face.title)\(face == DigitFont.face ? " (current)" : "")")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.white)
                         }
