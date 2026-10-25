@@ -56,7 +56,6 @@ final class AppSettings {
     var tickPattern: TickPattern { didSet { defaults.set(tickPattern.rawValue, forKey: "tickPattern") } }
     var dailyGoal: Int { didSet { defaults.set(dailyGoal, forKey: "dailyGoal") } }
     var focusModeSync: Bool { didSet { defaults.set(focusModeSync, forKey: "focusModeSync") } }
-    var theme: ThemeColor { didSet { defaults.set(theme.rawValue, forKey: "theme") } }
 
     var appearance: Appearance {
         didSet {
@@ -74,7 +73,7 @@ final class AppSettings {
             "customMinutes": 10, "tickSound": TickSound.mechanical.rawValue, "tickVolume": 0.6,
             "muted": false, "silentBreaks": true, "startChime": true,
             "appearance": Appearance.system.rawValue, "tickPattern": TickPattern.always.rawValue,
-            "dailyGoal": 8, "focusModeSync": false, "theme": ThemeColor.blue.rawValue,
+            "dailyGoal": 8, "focusModeSync": false,
         ])
         focusMinutes = defaults.integer(forKey: "focusMinutes")
         shortBreakMinutes = defaults.integer(forKey: "shortBreakMinutes")
@@ -89,7 +88,6 @@ final class AppSettings {
         tickPattern = TickPattern(rawValue: defaults.string(forKey: "tickPattern") ?? "") ?? .always
         dailyGoal = defaults.integer(forKey: "dailyGoal")
         focusModeSync = defaults.bool(forKey: "focusModeSync")
-        theme = ThemeColor(rawValue: defaults.string(forKey: "theme") ?? "") ?? .blue
         appearance = Appearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }
 

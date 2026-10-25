@@ -4,7 +4,6 @@ struct SettingsTab: View {
     @Environment(AppSettings.self) private var settings
     @Environment(TimerEngine.self) private var engine
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
     @State var soundListOpen = false
     @State private var shortcutsReady: Bool?
 
@@ -14,7 +13,7 @@ struct SettingsTab: View {
 
     private var content: some View {
         @Bindable var settings = settings
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
 
         return VStack(alignment: .leading, spacing: 10) {
             TabTitle(text: "Settings")
@@ -164,12 +163,6 @@ struct SettingsTab: View {
 
             Box {
                 HStack {
-                    Text("Color")
-                    Spacer()
-                    Segmented(options: ThemeColor.allCases.map { ($0, $0.title) },
-                              selection: $settings.theme)
-                }
-                HStack {
                     Text("Appearance")
                     Spacer()
                     Segmented(options: Appearance.allCases.map { ($0, $0.title) },
@@ -217,7 +210,7 @@ struct SettingsTab: View {
     }
 
     private func stepButton(_ icon: String, action: @escaping () -> Void) -> some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         return Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 9, weight: .bold))
@@ -242,10 +235,9 @@ private struct MinutesTile: View {
     @Binding var value: Int
     let range: ClosedRange<Int>
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         VStack(spacing: 3) {
             Text(title).font(.system(size: 11)).foregroundStyle(p.muted)
             HStack(spacing: 0) {
@@ -268,7 +260,7 @@ private struct MinutesTile: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(Palette.of(scheme, theme).muted)
+                .foregroundStyle(Palette.of(scheme).muted)
                 .frame(width: 16, height: 28)
                 .contentShape(Rectangle())
         }

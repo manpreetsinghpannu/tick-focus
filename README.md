@@ -16,8 +16,8 @@ Requires macOS 14+ and the Swift command-line tools (Xcode not needed).
 
 - Click the pill in the menu bar to open the panel (Timer, Stats, Settings). Right-click it for Start/Pause, Skip, Reset and Quit.
 - ⌥⌘P starts or pauses from anywhere. Space works in the focus window.
-- Type what you're working on under the timer; Stats shows time per label and progress toward your daily goal.
-- Settings → Color switches between Blue and Grey.
+- Tasks tab: lists, tasks, and hours goals (total hours over N days, spread evenly, any day editable). Days turn Cobalt when done and Brick when a day ends short.
+- Pick a task under "Working on" on the Timer; finished focus sessions add their minutes to it.
 - Do Not Disturb during focus needs two Shortcuts named "Tick Focus On" and "Tick Focus Off", each with a Set Focus action.
 - The expand icon on the Timer tab opens the flip clock focus window (resizable, can go fullscreen).
 - Quit from the bottom of the Settings tab.

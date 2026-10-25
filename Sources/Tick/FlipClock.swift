@@ -84,10 +84,9 @@ struct FlipClockView: View {
     @Environment(TimerEngine.self) private var engine
     @Environment(AppSettings.self) private var settings
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         let accent = p.accent(for: engine.phase)
         GeometryReader { geo in
             let cardHeight = min(geo.size.height * 0.56, geo.size.width / 4.2)
@@ -133,7 +132,7 @@ struct FlipClockView: View {
         var parts = [engine.mode == .pomodoro && !engine.phase.isBreak
             ? "Focus · round \(engine.round) of \(settings.rounds)"
             : engine.phase.title]
-        let label = engine.label.trimmingCharacters(in: .whitespaces)
+        let label = engine.workingOnTitle
         if !label.isEmpty && !engine.phase.isBreak { parts.append(label) }
         return parts.joined(separator: " · ")
     }

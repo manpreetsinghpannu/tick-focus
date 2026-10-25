@@ -5,14 +5,13 @@ struct StatsTab: View {
     @Environment(StatsStore.self) private var stats
     @Environment(AppSettings.self) private var settings
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
         PanelScroll { content }
     }
 
     private var content: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         let today = stats.today
         let goal = max(settings.dailyGoal, 1)
         let streak = stats.streak(goal: goal)
@@ -35,7 +34,7 @@ struct StatsTab: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(p.track)
-                    Capsule().fill(p.accent)
+                    Capsule().fill(today.pomodoros >= goal ? p.done : p.accent)
                         .frame(width: geo.size.width * min(Double(today.pomodoros) / Double(goal), 1))
                 }
             }
@@ -107,7 +106,7 @@ struct StatsTab: View {
     }
 
     private func heading(_ title: String, detail: String) -> some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         return HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(title).font(.system(size: 14, weight: .semibold))
             Text(detail).font(.system(size: 11)).foregroundStyle(p.muted)

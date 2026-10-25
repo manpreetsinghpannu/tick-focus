@@ -1,10 +1,11 @@
 import SwiftUI
 
 enum PanelTab: CaseIterable {
-    case timer, stats, settings
+    case tasks, timer, stats, settings
 
     var title: String {
         switch self {
+        case .tasks: "Tasks"
         case .timer: "Timer"
         case .stats: "Stats"
         case .settings: "Settings"
@@ -13,9 +14,10 @@ enum PanelTab: CaseIterable {
 
     var icon: String {
         switch self {
-        case .timer: "hourglass"
-        case .stats: "chart.bar.fill"
-        case .settings: "gearshape.fill"
+        case .tasks: "checkmark.square"
+        case .timer: "timer"
+        case .stats: "chart.bar"
+        case .settings: "gearshape"
         }
     }
 }
@@ -25,13 +27,13 @@ struct PanelView: View {
     var openFocusWindow: () -> Void = {}
     @State var tab: PanelTab = .timer
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         VStack(spacing: 0) {
             Group {
                 switch tab {
+                case .tasks: TasksTab(onWorkOn: { tab = .timer })
                 case .timer: TimerTab(openFocusWindow: openFocusWindow)
                 case .stats: StatsTab()
                 case .settings: SettingsTab()
@@ -40,23 +42,21 @@ struct PanelView: View {
             .frame(maxHeight: .infinity, alignment: .top)
 
             Rectangle().fill(p.border).frame(height: 0.5)
-            HStack {
+            // Four equal, icon-only tabs.
+            HStack(spacing: 0) {
                 ForEach(PanelTab.allCases, id: \.self) { item in
                     Button { tab = item } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: item.icon)
-                                .font(.system(size: 13))
-                                .foregroundStyle(tab == item ? p.accent : p.muted)
-                                .frame(width: 44, height: 22)
-                                .background(tab == item ? p.track : .clear, in: Capsule())
-                            Text(item.title)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(tab == item ? p.text : p.muted)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
+                        Image(systemName: item.icon)
+                            .font(.system(size: 17, weight: .medium))
+                            .frame(width: 22, height: 22)
+                            .foregroundStyle(tab == item ? p.text : p.muted)
+                            .frame(width: 48, height: 32)
+                            .background(tab == item ? p.tonal : .clear, in: RoundedRectangle(cornerRadius: 9))
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .help(item.title)
                 }
             }
             .padding(.top, 8)
@@ -72,10 +72,9 @@ struct TimerTab: View {
     @Environment(TimerEngine.self) private var engine
     @Environment(AppSettings.self) private var settings
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         let accent = p.accent(for: engine.phase)
         let mode = Binding(get: { engine.mode }, set: { engine.setMode($0) })
 
@@ -100,7 +99,7 @@ struct TimerTab: View {
                     .font(.system(size: 11))
                     .foregroundStyle(p.muted)
             }
-            SessionLabelField()
+            WorkingOnPicker()
 
             ZStack {
                 Circle().stroke(p.track(for: engine.phase), lineWidth: 12)
@@ -171,31 +170,88 @@ struct TimerTab: View {
     }
 }
 
-/// "What are you working on?" — the label is saved with the session in stats.
-private struct SessionLabelField: View {
+/// Picks which task this focus time counts toward. Finished focus sessions log their minutes to it.
+private struct WorkingOnPicker: View {
+    @State private var open = false
     @Environment(TimerEngine.self) private var engine
+    @Environment(TaskStore.self) private var store
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        @Bindable var engine = engine
-        let p = Palette.of(scheme, theme)
-        Group {
-            if Snapshot.isRendering {
-                Text(engine.label.isEmpty ? "What are you working on?" : engine.label)
-                    .foregroundStyle(engine.label.isEmpty ? p.muted : p.text)
-            } else {
-                TextField("What are you working on?", text: $engine.label)
-                    .textFieldStyle(.plain)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(p.text)
+        let p = Palette.of(scheme)
+        let task = store.task(engine.workingOn).flatMap { $0.isDone ? nil : $0 }
+        VStack(spacing: 3) {
+            Button { open.toggle() } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "checkmark.square").font(.system(size: 11))
+                    Text(task.map { $0.title } ?? "Choose a task")
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold))
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(task == nil ? p.muted : p.text)
+                .padding(.horizontal, 12)
+                .frame(maxWidth: 230)
+                .frame(height: 26)
+                .background(p.tonal, in: Capsule())
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+
+            if let today = task?.today {
+                Text(today.status == .done
+                     ? "\(formatMinutes(today.worked)) today · goal done"
+                     : "\(formatMinutes(today.worked)) of \(formatMinutes(today.target)) today")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(today.status == .done ? p.done : p.muted)
             }
         }
-        .font(.system(size: 12))
-        .lineLimit(1)
-        .padding(.horizontal, 12)
-        .frame(width: 220, height: 26)
-        .background(p.tonal, in: Capsule())
+        .overlay(alignment: .top) {
+            if open {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(store.openTasks) { item in
+                        pickRow(item.title, chip: item.today.map { "\(formatMinutes($0.worked)) / \(formatMinutes($0.target))" },
+                                done: item.today?.status == .done, selected: item.id == engine.workingOn, p) {
+                            engine.workingOn = item.id
+                            open = false
+                        }
+                    }
+                    if store.openTasks.isEmpty {
+                        Text("Add tasks in the Tasks tab.").font(.system(size: 12)).foregroundStyle(p.muted).padding(8)
+                    }
+                    pickRow("None", chip: nil, done: false, selected: engine.workingOn == nil, p) {
+                        engine.workingOn = nil
+                        open = false
+                    }
+                }
+                .padding(6)
+                .frame(width: 240)
+                .background(p.card, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(p.border, lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+                .offset(y: 30)
+            }
+        }
+        .zIndex(1)
+    }
+
+    private func pickRow(_ title: String, chip: String?, done: Bool, selected: Bool, _ p: Palette,
+                         action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title).lineLimit(1)
+                Spacer()
+                if let chip { GoalChip(text: chip, fill: done ? p.done : p.tonal, color: done ? .white : p.text) }
+                if selected { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)) }
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(p.text)
+            .padding(.horizontal, 8)
+            .frame(height: 28)
+            .background(selected ? p.tonal : .clear, in: RoundedRectangle(cornerRadius: 7))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -203,10 +259,9 @@ private struct CustomMinutesRow: View {
     @Environment(TimerEngine.self) private var engine
     @Environment(AppSettings.self) private var settings
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         HStack(spacing: 10) {
             stepButton("minus") { settings.customMinutes = max(1, settings.customMinutes - (settings.customMinutes > 10 ? 5 : 1)) }
             Text("\(settings.customMinutes) min")
@@ -221,7 +276,7 @@ private struct CustomMinutesRow: View {
     }
 
     private func stepButton(_ icon: String, action: @escaping () -> Void) -> some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         return Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 12, weight: .bold))

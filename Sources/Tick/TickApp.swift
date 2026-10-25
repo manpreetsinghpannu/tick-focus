@@ -17,7 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = AppSettings()
     private let stats = StatsStore()
     private let sound = SoundPlayer()
-    private lazy var engine = TimerEngine(settings: settings, stats: stats, sound: sound)
+    private let tasks = TaskStore()
+    private lazy var engine = TimerEngine(settings: settings, stats: stats, sound: sound, tasks: tasks)
 
     private var statusItem: NSStatusItem!
     private let popover = NSPopover()
@@ -102,7 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func inject<V: View>(_ view: V) -> some View {
-        ThemedRoot(content: view).environment(engine).environment(settings).environment(stats)
+        view.environment(engine).environment(settings).environment(stats).environment(tasks)
     }
 
     /// Redraws the menu bar pill whenever the time, phase or running state changes.
@@ -110,8 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         withObservationTracking {
             statusItem.button?.image = MenuBarPill.image(
                 minutes: engine.minutesText, seconds: engine.secondsText,
-                phase: engine.phase, running: engine.isRunning, fresh: engine.isFresh,
-                theme: settings.theme)
+                phase: engine.phase, running: engine.isRunning, fresh: engine.isFresh)
         } onChange: {
             DispatchQueue.main.async { [weak self] in self?.trackStatusItem() }
         }
@@ -190,12 +190,3 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// Passes the chosen color theme down to every view.
-private struct ThemedRoot<Content: View>: View {
-    let content: Content
-    @Environment(AppSettings.self) private var settings
-
-    var body: some View {
-        content.environment(\.tickTheme, settings.theme)
-    }
-}

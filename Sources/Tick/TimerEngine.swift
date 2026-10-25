@@ -26,6 +26,7 @@ final class TimerEngine {
     @ObservationIgnored let settings: AppSettings
     @ObservationIgnored let stats: StatsStore
     @ObservationIgnored let sound: SoundPlayer
+    @ObservationIgnored let tasks: TaskStore
 
     private(set) var mode: TimerMode = .pomodoro
     private(set) var phase: Phase = .focus
@@ -33,20 +34,27 @@ final class TimerEngine {
     private(set) var total: Int
     private(set) var remaining: Int
     private(set) var isRunning = false
-    /// What the current focus session is for, e.g. "Python course". Recorded in stats.
-    var label = ""
+    /// The task this focus time counts toward. Finished focus sessions add their minutes to it.
+    var workingOn: UUID?
 
     @ObservationIgnored private let focusMode = FocusModeController()
     @ObservationIgnored private var timer: DispatchSourceTimer?
     @ObservationIgnored private var tickIndex = 0
 
-    init(settings: AppSettings, stats: StatsStore, sound: SoundPlayer) {
+    init(settings: AppSettings, stats: StatsStore, sound: SoundPlayer, tasks: TaskStore) {
         self.settings = settings
         self.stats = stats
         self.sound = sound
+        self.tasks = tasks
         let focus = settings.focusMinutes * 60
         total = focus
         remaining = focus
+    }
+
+    /// The selected task's title, or "" if none is selected (or it was deleted or completed).
+    var workingOnTitle: String {
+        guard let task = tasks.task(workingOn), !task.isDone else { return "" }
+        return task.title
     }
 
     var progress: Double { total == 0 ? 0 : 1 - Double(remaining) / Double(total) }
@@ -173,8 +181,9 @@ final class TimerEngine {
         pause()
         sound.playBell()
         switch phase {
-        case .focus: stats.recordFocus(seconds: total, countsAsPomodoro: true, label: label)
-        case .custom: stats.recordFocus(seconds: total, countsAsPomodoro: false, label: label)
+        case .focus, .custom:
+            stats.recordFocus(seconds: total, countsAsPomodoro: phase == .focus, label: workingOnTitle)
+            if let id = workingOn, !workingOnTitle.isEmpty { tasks.log(minutes: total / 60, to: id) }
         case .shortBreak, .longBreak: stats.recordBreak(seconds: total)
         }
         advance()

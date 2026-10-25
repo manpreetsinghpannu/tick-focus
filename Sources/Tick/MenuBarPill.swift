@@ -3,9 +3,8 @@ import SwiftUI
 /// The countdown pill shown in the menu bar, rendered to a (non-template) image so it keeps its color.
 enum MenuBarPill {
     @MainActor
-    static func image(minutes: String, seconds: String, phase: Phase, running: Bool, fresh: Bool,
-                      theme: ThemeColor) -> NSImage {
-        let p = Palette.of(.light, theme)
+    static func image(minutes: String, seconds: String, phase: Phase, running: Bool, fresh: Bool) -> NSImage {
+        let p = Palette.light
         let color = p.accent(for: phase)
         let icon = !running && !fresh ? "pause.fill" : (phase.isBreak ? "cup.and.saucer.fill" : "target")
         let pill = HStack(spacing: 4) {

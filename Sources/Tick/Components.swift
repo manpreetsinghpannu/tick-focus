@@ -32,10 +32,9 @@ struct BlueSlider: View {
     var step: Double?
     var dimmed = false
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         let fill = dimmed ? p.muted : p.accent
         GeometryReader { geo in
             let usable = max(geo.size.width - 16, 1)
@@ -71,10 +70,9 @@ struct BlueSwitch: ToggleStyle {
     private struct SwitchRow: View {
         let configuration: ToggleStyleConfiguration
         @Environment(\.colorScheme) private var scheme
-        @Environment(\.tickTheme) private var theme
 
         var body: some View {
-            let p = Palette.of(scheme, theme)
+            let p = Palette.of(scheme)
             HStack {
                 configuration.label
                 Spacer()
@@ -96,10 +94,9 @@ struct Segmented<Value: Hashable>: View {
     let options: [(Value, String)]
     @Binding var selection: Value
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         HStack(spacing: 2) {
             ForEach(options, id: \.0) { value, label in
                 Button {
@@ -125,10 +122,9 @@ struct Segmented<Value: Hashable>: View {
 struct Box<Content: View>: View {
     @ViewBuilder var content: Content
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
-        let p = Palette.of(scheme, theme)
+        let p = Palette.of(scheme)
         VStack(alignment: .leading, spacing: 10) { content }
             .font(.system(size: 12))
             .foregroundStyle(p.text)
@@ -144,12 +140,11 @@ struct TabTitle: View {
     let text: String
     var color: Color?
     @Environment(\.colorScheme) private var scheme
-    @Environment(\.tickTheme) private var theme
 
     var body: some View {
         Text(text)
             .font(.system(size: 20, weight: .semibold, design: .rounded))
-            .foregroundStyle(color ?? Palette.of(scheme, theme).accent)
+            .foregroundStyle(color ?? Palette.of(scheme).accent)
             .frame(maxWidth: .infinity)
     }
 }
