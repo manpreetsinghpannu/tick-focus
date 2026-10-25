@@ -273,13 +273,13 @@ final class TaskStore {
             }
             tasks.append(t)
         }
-        make("Investment club", 1)
-        make("ACCA Lecture", 2, goal: HourGoal(totalHours: 20, days: 10, start: cal.date(byAdding: .day, value: -3, to: Date())!),
+        make("Plan the week", 1)
+        make("Spanish lessons", 2, goal: HourGoal(totalHours: 20, days: 10, start: cal.date(byAdding: .day, value: -3, to: Date())!),
              logged: [0, 0, 0, 0, 0, 0, 0, 0, 120, 130, 60, 45])
-        make("ACCA Practice", 3, goal: HourGoal(totalHours: 28, days: 14, start: start),
+        make("Swift course", 3, goal: HourGoal(totalHours: 28, days: 14, start: start),
              logged: [120, 72, 150, 120, 30, 126, 0, 120, 108, 132, 120, 84])
-        make("Equity Research", 4)
-        make("FMVA", 5, goal: HourGoal(totalHours: 7, days: 7, start: cal.date(byAdding: .day, value: -2, to: Date())!),
+        make("Read a chapter", 4)
+        make("Guitar practice", 5, goal: HourGoal(totalHours: 7, days: 7, start: cal.date(byAdding: .day, value: -2, to: Date())!),
              logged: [0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 70, 60])
     }
 

@@ -109,8 +109,8 @@ final class StatsStore {
             let python = min(poms, 3) * 25 * 60
             days[Self.keyFormatter.string(from: date)] = DayStat(
                 focusSeconds: poms * 25 * 60, breakSeconds: poms * 5 * 60, pomodoros: poms,
-                labels: ["Python course": python, "Reading": (poms - min(poms, 3)) * 25 * 60 / 2,
-                         "Backtest script": (poms - min(poms, 3)) * 25 * 60 / 2])
+                labels: ["Swift course": python, "Spanish lessons": (poms - min(poms, 3)) * 25 * 60 / 2,
+                         "Guitar practice": (poms - min(poms, 3)) * 25 * 60 / 2])
         }
     }
 

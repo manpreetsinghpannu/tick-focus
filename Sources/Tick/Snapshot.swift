@@ -15,7 +15,7 @@ enum Snapshot {
         let tasks = TaskStore(inMemory: true)
         tasks.seedSample()
         let engine = TimerEngine(settings: settings, stats: stats, sound: SoundPlayer(), tasks: tasks)
-        let practice = tasks.tasks.first { $0.title == "ACCA Practice" }!
+        let practice = tasks.tasks.first { $0.title == "Swift course" }!
         engine.workingOn = practice.id
 
         for scheme in [ColorScheme.light, .dark] {
