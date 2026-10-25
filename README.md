@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="Assets/AppIcon-1024.png" width="128" alt="Tick Focus app icon">
+  <img src="Assets/AppIcon-1024.png" width="128" alt="On Track app icon">
 </p>
 
-<h1 align="center">Tick Focus</h1>
+<h1 align="center">On Track</h1>
 
 <p align="center">
   A menu bar Pomodoro timer for macOS that ticks every second, tracks the hours you put into each task,<br>
@@ -66,7 +66,7 @@
 - **Light, dark or follow the system**, in a calm grey design.
 - **Smooth floating menus** with soft shadows.
 - **Launch at login**, and no Dock icon: the app stays quietly in the menu bar.
-- **Liquid Glass style app icon**.
+- **Clean, geometric app icon**: a pixel checkmark, with the finishing stroke in Cobalt.
 
 <p align="center">
   <img src="docs/screenshots/timer-light.png" width="200" alt="Timer, light mode">
@@ -79,16 +79,16 @@
 
 ## Install
 
-Tick Focus is built from source. You need **macOS 14 or later** and the **Swift command-line tools** (the full Xcode app is not required).
+On Track is built from source. You need **macOS 14 or later** and the **Swift command-line tools** (the full Xcode app is not required).
 
 ```bash
 git clone https://github.com/manpreetsinghpannu/tick-focus.git
 cd tick-focus
 ./build.sh --install
-open "/Applications/Tick Focus.app"
+open "/Applications/On Track.app"
 ```
 
-`./build.sh` on its own builds `build/Tick Focus.app` without installing. Installing to `/Applications` is needed for **Launch at login**.
+`./build.sh` on its own builds `build/On Track.app` without installing. Installing to `/Applications` is needed for **Launch at login**.
 
 The app is signed only for your own Mac. If macOS warns about it the first time, open **System Settings → Privacy & Security** and click **Open Anyway**.
 
@@ -101,12 +101,12 @@ The app is signed only for your own Mac. If macOS warns about it the first time,
 
 ### Do Not Disturb setup
 
-macOS doesn't let apps switch Focus modes directly, so Tick Focus uses two Shortcuts you create once in the **Shortcuts** app:
+macOS doesn't let apps switch Focus modes directly, so On Track uses two Shortcuts you create once in the **Shortcuts** app:
 
 | Shortcut name | Action |
 |---|---|
-| `Tick Focus On` | Set Focus → Do Not Disturb → **On** |
-| `Tick Focus Off` | Set Focus → Do Not Disturb → **Off** |
+| `On Track Focus On` | Set Focus → Do Not Disturb → **On** |
+| `On Track Focus Off` | Set Focus → Do Not Disturb → **Off** |
 
 Then turn on **Settings → Do Not Disturb during focus**. The app confirms once it finds both shortcuts.
 
@@ -134,7 +134,8 @@ If a data file ever can't be read, it's kept to one side as `*.unreadable-<time>
 | `FocusMode.swift` | Do Not Disturb via Shortcuts |
 | `PanelView.swift`, `TasksTab.swift`, `StatsTab.swift`, `SettingsTab.swift` | The four panel tabs |
 | `Components.swift`, `Theme.swift` | Shared controls, colors and clock fonts |
-| `AppIcon.swift` | The app icon artwork (`./make-icon.sh` rebuilds `Assets/AppIcon.icns`) |
+| `CleanIcon.swift` | The app icon artwork (`./make-icon.sh [mark] [light\|dark]` rebuilds `Assets/AppIcon.icns`) |
+| `AppIcon.swift` | Earlier icon concepts, kept for comparison sheets |
 | `Snapshot.swift` | `Tick --snapshot <dir>` renders every screen to PNGs, with sample data |
 
 ## License

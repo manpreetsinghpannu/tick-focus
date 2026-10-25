@@ -163,7 +163,7 @@ struct SettingsTab: View {
             .toggleStyle(BlueSwitch())
 
             Button { NSApp.terminate(nil) } label: {
-                Text("Quit Tick Focus")
+                Text("Quit On Track")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(p.muted)
                     .frame(maxWidth: .infinity)

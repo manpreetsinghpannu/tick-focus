@@ -1,11 +1,15 @@
 #!/bin/bash
-# Regenerates Assets/AppIcon.icns from the AppIconView artwork. Run after changing AppIcon.swift.
+# Regenerates Assets/AppIcon.icns from the chosen CleanIcon mark. Run after changing CleanIcon.swift.
+# Usage: ./make-icon.sh [mark] [light|dark]   (marks are listed in CleanMark, e.g. pixelCheck, lanes)
 set -euo pipefail
 cd "$(dirname "$0")"
 
+MARK="${1:-pixelCheck}"
+TILE="${2:-dark}"
+
 swift build
 WORK="$(mktemp -d)"
-.build/debug/Tick --icon "$WORK/icon-1024.png"
+.build/debug/Tick --clean-icon "$WORK/icon-1024.png" "$MARK" "$TILE"
 
 ICONSET="$WORK/AppIcon.iconset"
 mkdir -p "$ICONSET"

@@ -35,6 +35,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AppIconView.render(style ?? AppIconView.chosen, to: URL(fileURLWithPath: args[flag + 1]))
             exit(0)
         }
+        if let flag = args.firstIndex(of: "--clean-icon"), args.indices.contains(flag + 2),
+           let mark = CleanMark(rawValue: args[flag + 2]) {
+            let dark = args.indices.contains(flag + 3) && args[flag + 3] == "dark"
+            CleanIconView.render(mark, dark: dark, to: URL(fileURLWithPath: args[flag + 1]))
+            exit(0)
+        }
+        if let flag = args.firstIndex(of: "--clean-sheet"), args.indices.contains(flag + 1) {
+            CleanIconView.renderSheet(to: URL(fileURLWithPath: args[flag + 1]))
+            exit(0)
+        }
         if let flag = args.firstIndex(of: "--icon-compare"), args.indices.contains(flag + 1) {
             let styles = args[(flag + 2)...].compactMap(IconStyle.init(rawValue:))
             AppIconView.renderComparison(styles, to: URL(fileURLWithPath: args[flag + 1]))
@@ -45,7 +55,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             exit(0)
         }
         if let flag = args.firstIndex(of: "--icon-sheet"), args.indices.contains(flag + 1) {
-            AppIconView.renderSheet(to: URL(fileURLWithPath: args[flag + 1]))
+            let styles = args[(flag + 2)...].compactMap(IconStyle.init(rawValue:))
+            AppIconView.renderSheet(styles.isEmpty ? IconStyle.allCases : styles, to: URL(fileURLWithPath: args[flag + 1]))
             exit(0)
         }
 
@@ -135,7 +146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(menuItem("Skip", #selector(menuSkip)))
         menu.addItem(menuItem("Reset", #selector(menuReset)))
         menu.addItem(.separator())
-        menu.addItem(menuItem("Quit Tick Focus", #selector(menuQuit), key: "q"))
+        menu.addItem(menuItem("Quit On Track", #selector(menuQuit), key: "q"))
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil

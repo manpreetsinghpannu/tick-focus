@@ -113,7 +113,7 @@ final class AppSettings {
             }
             launchAtLoginError = nil
         } catch {
-            launchAtLoginError = "Couldn't change this. Move Tick Focus to Applications and try again."
+            launchAtLoginError = "Couldn't change this. Move On Track to Applications and try again."
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }

@@ -1,11 +1,11 @@
 #!/bin/bash
-# Builds "Tick Focus.app" into ./build. Usage: ./build.sh [--install]
+# Builds "On Track.app" into ./build. Usage: ./build.sh [--install]
 set -euo pipefail
 cd "$(dirname "$0")"
 
 swift build -c release
 
-APP="build/Tick Focus.app"
+APP="build/On Track.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/Tick "$APP/Contents/MacOS/Tick"
@@ -18,8 +18,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <dict>
     <key>CFBundleExecutable</key><string>Tick</string>
     <key>CFBundleIdentifier</key><string>com.manpreet.tick</string>
-    <key>CFBundleName</key><string>Tick Focus</string>
-    <key>CFBundleDisplayName</key><string>Tick Focus</string>
+    <key>CFBundleName</key><string>On Track</string>
+    <key>CFBundleDisplayName</key><string>On Track</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>1.0</string>
@@ -36,7 +36,7 @@ echo "Built $APP"
 
 if [[ "${1:-}" == "--install" ]]; then
     pkill -x Tick 2>/dev/null || true
-    rm -rf /Applications/Tick.app "/Applications/Tick Focus.app"
-    cp -R "$APP" "/Applications/Tick Focus.app"
-    echo "Installed to /Applications/Tick Focus.app"
+    rm -rf /Applications/Tick.app "/Applications/Tick Focus.app" "/Applications/On Track.app"
+    cp -R "$APP" "/Applications/On Track.app"
+    echo "Installed to /Applications/On Track.app"
 fi

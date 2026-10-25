@@ -4,11 +4,11 @@ import Foundation
 /// macOS has no public API for Focus, so this runs two user-made Shortcuts that each contain a "Set Focus" action.
 /// Runs happen one at a time, in order, so a quick start-then-pause can't finish "On" after "Off".
 final class FocusModeController {
-    static let onShortcut = "Tick Focus On"
-    static let offShortcut = "Tick Focus Off"
+    static let onShortcut = "On Track Focus On"
+    static let offShortcut = "On Track Focus Off"
 
     private var active = false
-    private let queue = DispatchQueue(label: "TickFocus.focusMode")
+    private let queue = DispatchQueue(label: "OnTrack.focusMode")
 
     func set(active newValue: Bool) {
         guard newValue != active else { return }
