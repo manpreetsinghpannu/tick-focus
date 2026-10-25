@@ -22,8 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private let popover = NSPopover()
-    private var focusWindow: NSWindow?
-    private var hotKey: HotKey?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let flag = CommandLine.arguments.firstIndex(of: "--snapshot"),
@@ -42,6 +40,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AppIconView.renderComparison(styles, to: URL(fileURLWithPath: args[flag + 1]))
             exit(0)
         }
+        if let flag = args.firstIndex(of: "--font-sheet"), args.indices.contains(flag + 1) {
+            Snapshot.renderFontSheet(to: URL(fileURLWithPath: args[flag + 1]))
+            exit(0)
+        }
         if let flag = args.firstIndex(of: "--icon-sheet"), args.indices.contains(flag + 1) {
             AppIconView.renderSheet(to: URL(fileURLWithPath: args[flag + 1]))
             exit(0)
@@ -56,7 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem.button?.imagePosition = .imageOnly
 
-        let panel = PanelView(openFocusWindow: { [weak self] in self?.showFocusWindow() })
+        let panel = PanelView()
         popover.contentViewController = NSHostingController(rootView: inject(panel))
         popover.contentSize = NSSize(width: 320, height: 540)
         popover.behavior = .transient
@@ -66,7 +68,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DistributedNotificationCenter.default().addObserver(
             self, selector: #selector(systemThemeChanged),
             name: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil)
-        hotKey = HotKey { [weak self] in self?.engine.toggle() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -74,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// A popover attached to the menu bar inherits the menu bar's look (often dark, depending on
-    /// the wallpaper), not the app's. So the panel and focus window get the chosen appearance explicitly.
+    /// the wallpaper), not the app's. So the panel gets the chosen appearance explicitly.
     private func trackAppearance() {
         withObservationTracking {
             applyWindowAppearance(settings.appearance)
@@ -99,7 +100,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         let resolved = NSAppearance(named: dark ? .darkAqua : .aqua)
         popover.appearance = resolved
-        focusWindow?.appearance = resolved
     }
 
     private func inject<V: View>(_ view: V) -> some View {
@@ -131,11 +131,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.performClose(nil)
         let menu = NSMenu()
         let toggleTitle = engine.isRunning ? "Pause" : (engine.isFresh ? "Start" : "Resume")
-        menu.addItem(menuItem(toggleTitle, #selector(menuToggle), key: "p", modifiers: [.command, .option]))
+        menu.addItem(menuItem(toggleTitle, #selector(menuToggle)))
         menu.addItem(menuItem("Skip", #selector(menuSkip)))
         menu.addItem(menuItem("Reset", #selector(menuReset)))
-        menu.addItem(.separator())
-        menu.addItem(menuItem("Open Focus Window", #selector(menuOpenFocus)))
         menu.addItem(.separator())
         menu.addItem(menuItem("Quit Tick Focus", #selector(menuQuit), key: "q"))
         statusItem.menu = menu
@@ -154,7 +152,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func menuToggle() { engine.toggle() }
     @objc private func menuSkip() { engine.skip() }
     @objc private func menuReset() { engine.reset() }
-    @objc private func menuOpenFocus() { showFocusWindow() }
     @objc private func menuQuit() { NSApp.terminate(nil) }
 
     private func togglePopover() {
@@ -165,28 +162,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }
-    }
-
-    private func showFocusWindow() {
-        popover.performClose(nil)
-        if focusWindow == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 760, height: 380),
-                styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-                backing: .buffered, defer: false)
-            window.title = "Tick Focus"
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.isReleasedWhenClosed = false
-            window.collectionBehavior = [.fullScreenPrimary]
-            window.contentView = NSHostingView(rootView: inject(FlipClockView()))
-            window.center()
-            window.setFrameAutosaveName("FocusWindow")
-            focusWindow = window
-            applyWindowAppearance(settings.appearance)
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        focusWindow?.makeKeyAndOrderFront(nil)
     }
 }
 

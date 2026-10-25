@@ -173,15 +173,6 @@ struct SettingsTab: View {
                 if let error = settings.launchAtLoginError {
                     Text(error).font(.system(size: 11)).foregroundStyle(.red)
                 }
-                HStack {
-                    Text("Start / pause hotkey")
-                    Spacer()
-                    Text("⌥⌘P")
-                        .font(.system(size: 11, design: .monospaced))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(p.tonal, in: RoundedRectangle(cornerRadius: 6))
-                }
             }
             .toggleStyle(BlueSwitch())
 

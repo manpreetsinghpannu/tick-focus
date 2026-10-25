@@ -24,7 +24,6 @@ enum PanelTab: CaseIterable {
 
 /// The dropdown shown from the menu bar.
 struct PanelView: View {
-    var openFocusWindow: () -> Void = {}
     @State var tab: PanelTab = .timer
     @Environment(\.colorScheme) private var scheme
 
@@ -34,7 +33,7 @@ struct PanelView: View {
             Group {
                 switch tab {
                 case .tasks: TasksTab(onWorkOn: { tab = .timer })
-                case .timer: TimerTab(openFocusWindow: openFocusWindow)
+                case .timer: TimerTab()
                 case .stats: StatsTab()
                 case .settings: SettingsTab()
                 }
@@ -68,7 +67,6 @@ struct PanelView: View {
 }
 
 struct TimerTab: View {
-    var openFocusWindow: () -> Void
     @Environment(TimerEngine.self) private var engine
     @Environment(AppSettings.self) private var settings
     @Environment(\.colorScheme) private var scheme
@@ -81,16 +79,6 @@ struct TimerTab: View {
         VStack(spacing: 8) {
             HStack {
                 Segmented(options: [(TimerMode.pomodoro, "Pomodoro"), (.custom, "Custom")], selection: mode)
-                Spacer()
-                Button(action: openFocusWindow) {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(p.muted)
-                        .frame(width: 26, height: 26)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("Open flip clock focus window")
             }
 
             TabTitle(text: engine.phase.title, color: accent)
@@ -111,7 +99,7 @@ struct TimerTab: View {
                         .animation(.linear(duration: 0.3), value: engine.progress)
                 }
                 SplitDigits(minutes: engine.minutesText, seconds: engine.secondsText,
-                            size: 68, color: accent, gapColor: p.bg)
+                            size: 68, color: accent, gapColor: p.bg, maxWidth: 150)
             }
             .frame(width: 184, height: 184)
             .padding(.vertical, 4)
@@ -126,7 +114,7 @@ struct TimerTab: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("Start or pause (⌥⌘P)")
+                .help("Start or pause")
                 .animation(.easeOut(duration: 0.15), value: engine.isRunning)
 
                 Button(action: engine.reset) {
