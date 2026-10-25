@@ -26,3 +26,7 @@ All sounds (five tick styles, the start chime, the end bell) are synthesized in 
 Stats are stored in `~/Library/Application Support/Tick/stats.json`.
 
 `Tick --snapshot <dir>` renders every screen in light and dark mode to PNGs.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
