@@ -157,3 +157,31 @@ struct PanelScroll<Content: View>: View {
         }
     }
 }
+
+// MARK: - Dropdown menus
+
+extension AnyTransition {
+    /// Grows in from where the menu is anchored, fades out on close.
+    static func dropdown(anchor: UnitPoint) -> AnyTransition {
+        .asymmetric(insertion: .scale(scale: 0.92, anchor: anchor).combined(with: .opacity),
+                    removal: .scale(scale: 0.97, anchor: anchor).combined(with: .opacity))
+    }
+}
+
+extension Animation {
+    static let dropdown = Animation.spring(response: 0.24, dampingFraction: 0.86)
+}
+
+extension View {
+    /// The floating card every dropdown uses: raised surface, hairline border, soft shadow.
+    func dropdownSurface(_ p: Palette) -> some View {
+        background {
+            // Shadow on the card shape only, so the menu's text stays crisp.
+            RoundedRectangle(cornerRadius: 12)
+                .fill(p.menu)
+                .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+                .shadow(color: .black.opacity(0.22), radius: 16, y: 8)
+        }
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(p.border, lineWidth: 0.5))
+    }
+}

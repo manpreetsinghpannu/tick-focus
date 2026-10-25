@@ -49,9 +49,7 @@ struct SettingsTab: View {
                 HStack {
                     Text("Tick sound")
                     Spacer()
-                    Button {
-                        withAnimation(.easeOut(duration: 0.15)) { soundListOpen.toggle() }
-                    } label: {
+                    Button { soundListOpen.toggle() } label: {
                         HStack(spacing: 6) {
                             Text(settings.tickSound.title).fontWeight(.medium)
                             Image(systemName: "chevron.down")
@@ -75,37 +73,23 @@ struct SettingsTab: View {
                     .buttonStyle(.plain)
                     .help("Preview")
                 }
-                if soundListOpen {
-                    VStack(spacing: 2) {
-                        ForEach(TickSound.allCases) { sound in
-                            Button {
-                                settings.tickSound = sound
-                                preview(sound)
-                                withAnimation(.easeOut(duration: 0.15)) { soundListOpen = false }
-                            } label: {
-                                HStack {
-                                    Text(sound.title)
-                                    Spacer()
-                                    if sound == settings.tickSound {
-                                        Image(systemName: "checkmark")
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                }
-                                .foregroundStyle(sound == settings.tickSound ? p.accent : p.text)
-                                .padding(.horizontal, 10)
-                                .frame(height: 26)
-                                .background(sound == settings.tickSound ? p.tonal : .clear,
-                                            in: RoundedRectangle(cornerRadius: 8))
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
+                .background {
+                    // Clicking anywhere else closes the list.
+                    if soundListOpen {
+                        Color.black.opacity(0.001)
+                            .frame(width: 2000, height: 3000)
+                            .onTapGesture { soundListOpen = false }
                     }
-                    .padding(4)
-                    .background(p.bg, in: RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(p.border, lineWidth: 0.5))
-                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
+                // Floats over the settings below instead of pushing them down.
+                .overlay(alignment: .topTrailing) {
+                    if soundListOpen {
+                        soundList(p)
+                            .offset(x: -30, y: 30)
+                            .transition(.dropdown(anchor: .topTrailing))
+                    }
+                }
+                .zIndex(1)
                 HStack(spacing: 8) {
                     Button { settings.muted.toggle() } label: {
                         Image(systemName: settings.muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
@@ -135,6 +119,8 @@ struct SettingsTab: View {
                 Toggle("Soft chime when focus starts", isOn: $settings.startChime)
             }
             .toggleStyle(BlueSwitch())
+            .zIndex(1)
+            .animation(.dropdown, value: soundListOpen)
 
             Box {
                 Toggle("Do Not Disturb during focus", isOn: $settings.focusModeSync)
@@ -191,6 +177,37 @@ struct SettingsTab: View {
         .onChange(of: settings.longBreakMinutes) { engine.settingsChanged() }
         .onChange(of: settings.focusModeSync) { engine.syncFocusMode() }
         .onChange(of: settings.rounds) { engine.settingsChanged() }
+    }
+
+    private func soundList(_ p: Palette) -> some View {
+        VStack(spacing: 2) {
+            ForEach(TickSound.allCases) { sound in
+                Button {
+                    settings.tickSound = sound
+                    preview(sound)
+                    soundListOpen = false
+                } label: {
+                    HStack {
+                        Text(sound.title)
+                        Spacer()
+                        if sound == settings.tickSound {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                    }
+                    .foregroundStyle(p.text)
+                    .padding(.horizontal, 10)
+                    .frame(height: 28)
+                    .background(sound == settings.tickSound ? p.menuSelected : .clear,
+                                in: RoundedRectangle(cornerRadius: 7))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(5)
+        .frame(width: 190)
+        .dropdownSurface(p)
     }
 
     private var tickPatternHint: String {

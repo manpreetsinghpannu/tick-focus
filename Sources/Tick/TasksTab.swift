@@ -77,11 +77,21 @@ struct TasksTab: View {
             }
         }
         .overlay(alignment: .topLeading) {
-            if listMenuOpen { ListMenu(close: { listMenuOpen = false }).offset(y: 34) }
+            if listMenuOpen {
+                ListMenu(close: { listMenuOpen = false })
+                    .offset(y: 34)
+                    .transition(.dropdown(anchor: .topLeading))
+            }
         }
         .overlay(alignment: .topTrailing) {
-            if sortMenuOpen { SortMenu().offset(y: 34) }
+            if sortMenuOpen {
+                SortMenu()
+                    .offset(y: 34)
+                    .transition(.dropdown(anchor: .topTrailing))
+            }
         }
+        .animation(.dropdown, value: listMenuOpen)
+        .animation(.dropdown, value: sortMenuOpen)
     }
 
     private var header: some View {
@@ -227,9 +237,7 @@ private struct MenuCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 2) { content }
             .padding(6)
             .frame(width: 210)
-            .background(p.card, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(p.border, lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+            .dropdownSurface(p)
     }
 }
 
@@ -253,7 +261,7 @@ private struct MenuRow: View {
             .foregroundStyle(p.text)
             .padding(.horizontal, 8)
             .frame(height: 28)
-            .background(checked ? p.tonal : .clear, in: RoundedRectangle(cornerRadius: 7))
+            .background(checked ? p.menuSelected : .clear, in: RoundedRectangle(cornerRadius: 7))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

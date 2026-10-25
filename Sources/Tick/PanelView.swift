@@ -228,12 +228,12 @@ private struct WorkingOnPicker: View {
                 }
                 .padding(6)
                 .frame(width: 240)
-                .background(p.card, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(p.border, lineWidth: 0.5))
-                .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+                .dropdownSurface(p)
                 .offset(y: 30)
+                .transition(.dropdown(anchor: .top))
             }
         }
+        .animation(.dropdown, value: open)
         .zIndex(1)
     }
 
@@ -250,7 +250,7 @@ private struct WorkingOnPicker: View {
             .foregroundStyle(p.text)
             .padding(.horizontal, 8)
             .frame(height: 28)
-            .background(selected ? p.tonal : .clear, in: RoundedRectangle(cornerRadius: 7))
+            .background(selected ? p.menuSelected : .clear, in: RoundedRectangle(cornerRadius: 7))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

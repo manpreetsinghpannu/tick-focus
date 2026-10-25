@@ -32,6 +32,8 @@ enum Snapshot {
                  dir.appendingPathComponent("stats-\(name).png"))
             save(SettingsTab(soundListOpen: false).padding(14).frame(width: 320).background(bg), env,
                  dir.appendingPathComponent("settings-\(name).png"))
+            save(SettingsTab(soundListOpen: true).padding(14).frame(width: 320).background(bg), env,
+                 dir.appendingPathComponent("settings-sound-open-\(name).png"))
         }
         let pill = MenuBarPill.image(minutes: "21", seconds: "14", phase: .focus, running: true, fresh: false)
         if let tiff = pill.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),

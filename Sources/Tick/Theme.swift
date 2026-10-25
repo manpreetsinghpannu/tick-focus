@@ -18,6 +18,9 @@ struct Palette {
     let breakAccent, breakTrack: Color
     let done = Color(hex: 0x0047AB)
     let missed = Color(hex: 0xB42318)
+    /// Dropdown menus sit a step above the cards they open over.
+    var menu = Color.white
+    var menuSelected = Color(hex: 0xE5E5EA)
 
     static let light = Palette(
         bg: Color(hex: 0xF5F5F7), card: .white, border: Color(hex: 0xDCDCE0),
@@ -31,7 +34,8 @@ struct Palette {
         text: Color(hex: 0xF2F2F7), muted: Color(hex: 0x98989D),
         accent: Color(hex: 0xB3B3B3), onAccent: Color(hex: 0x0B0B0C), tonal: Color(hex: 0x2C2C2E), track: Color(hex: 0x2A2A2C),
         sliderTrack: Color(hex: 0x3A3A3C),
-        breakAccent: Color(hex: 0x8E8E93), breakTrack: Color(hex: 0x222224))
+        breakAccent: Color(hex: 0x8E8E93), breakTrack: Color(hex: 0x222224),
+        menu: Color(hex: 0x262628), menuSelected: Color(hex: 0x3A3A3D))
 
     static func of(_ scheme: ColorScheme) -> Palette { scheme == .dark ? dark : light }
 
