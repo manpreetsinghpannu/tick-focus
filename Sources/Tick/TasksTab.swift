@@ -53,7 +53,7 @@ struct TasksTab: View {
             .background(p.card, in: RoundedRectangle(cornerRadius: 9))
 
             PanelScroll {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 6) {
                     let tasks = store.visibleTasks
                     if tasks.isEmpty {
                         Text("Add your first task above. Give it an hours goal to track daily time.")
@@ -134,13 +134,14 @@ private struct TaskRow: View {
 
     var body: some View {
         let p = Palette.of(scheme)
+        let tint = tint(p)
         HStack(spacing: 10) {
             Button {
                 store.update(task.id) { $0.isDone.toggle() }
             } label: {
                 Image(systemName: task.isDone ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 15))
-                    .foregroundStyle(task.isDone ? p.done : p.muted)
+                    .font(.system(size: 15, weight: task.standing == .neutral ? .regular : .semibold))
+                    .foregroundStyle(task.isDone ? p.done : tint ?? p.muted)
             }
             .buttonStyle(.plain)
 
@@ -155,7 +156,11 @@ private struct TaskRow: View {
             Spacer(minLength: 4)
             if !task.isDone, let chip = chip(p) { chip }
         }
-        .padding(.vertical, 7)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background((tint ?? .clear).opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10)
+            .strokeBorder(tint ?? p.border, lineWidth: tint == nil ? 1 : 1.5))
         .contentShape(Rectangle())
         .onTapGesture(perform: open)
         .contextMenu {
@@ -169,6 +174,15 @@ private struct TaskRow: View {
             }
             Divider()
             Button("Delete", role: .destructive) { store.delete(task.id) }
+        }
+    }
+
+    /// Cobalt when today's hours are done, Brick when behind; nil keeps the neutral grey outline.
+    private func tint(_ p: Palette) -> Color? {
+        switch task.standing {
+        case .doneToday: p.done
+        case .behind: p.missed
+        case .neutral: nil
         }
     }
 

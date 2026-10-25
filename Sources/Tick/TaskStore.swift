@@ -66,6 +66,12 @@ enum DayStatus {
     case done, missed, inProgress, upcoming, rest
 }
 
+/// How a task looks in the list: Cobalt when today's hours are done, Brick when the last finished
+/// day ended short and today isn't done yet, grey otherwise (including tasks without a goal).
+enum TaskStanding {
+    case neutral, doneToday, behind
+}
+
 struct TaskItem: Codable, Identifiable, Hashable {
     var id = UUID()
     var listID: UUID
@@ -94,6 +100,23 @@ struct TaskItem: Codable, Identifiable, Hashable {
     var today: (worked: Int, target: Int, status: DayStatus)? {
         guard let goal, let i = goal.dayIndex(of: Date()) else { return nil }
         return (loggedMinutes(on: Date()), goal.dailyMinutes[i], status(ofDay: i))
+    }
+
+    var standing: TaskStanding {
+        guard let goal, !isDone else { return .neutral }
+        if today?.status == .done { return .doneToday }
+        // The most recent day that has finished (before today, or the goal's last day if it's over)
+        // and actually asked for hours.
+        let lastFinished = (goal.dayIndex(of: Date()) ?? goal.days) - 1
+        let previous = stride(from: lastFinished, through: 0, by: -1).first { goal.dailyMinutes[$0] > 0 }
+        if let previous {
+            switch status(ofDay: previous) {
+            case .missed: return .behind
+            case .done where goal.dayIndex(of: Date()) == nil: return .doneToday
+            default: break
+            }
+        }
+        return .neutral
     }
 
     var goalProgress: Double {
@@ -252,12 +275,12 @@ final class TaskStore {
         }
         make("Investment club", 1)
         make("ACCA Lecture", 2, goal: HourGoal(totalHours: 20, days: 10, start: cal.date(byAdding: .day, value: -3, to: Date())!),
-             logged: [0, 0, 0, 0, 0, 0, 0, 0, 120, 60, 130, 45])
+             logged: [0, 0, 0, 0, 0, 0, 0, 0, 120, 130, 60, 45])
         make("ACCA Practice", 3, goal: HourGoal(totalHours: 28, days: 14, start: start),
              logged: [120, 72, 150, 120, 30, 126, 0, 120, 108, 132, 120, 84])
         make("Equity Research", 4)
         make("FMVA", 5, goal: HourGoal(totalHours: 7, days: 7, start: cal.date(byAdding: .day, value: -2, to: Date())!),
-             logged: [0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 70, 45])
+             logged: [0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 70, 60])
     }
 
     private func save() {
